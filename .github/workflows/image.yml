@@ -22,12 +22,12 @@ jobs:
             file: './images/Kernel/Dockerfile'
             platforms: 'linux/amd64,linux/arm64'
             tag-latest: 'auto'
-            tag-suffix: 'kernel'
+            tag-suffix: '-kernel'
           - context: './images/Notebook'
             file: './images/Notebook/Dockerfile'
             platforms: 'linux/amd64,linux/arm64'
             tag-latest: 'auto'
-            tag-suffix: 'notebook'
+            tag-suffix: '-notebook'
 
 
     runs-on: ubuntu-latest
