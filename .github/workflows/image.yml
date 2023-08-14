@@ -1,0 +1,77 @@
+---
+name: 'build container images'
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    strategy:
+      matrix:
+        include:
+          - context: './images/Kernel'
+            file: './images/Kernel/Dockerfile'
+            platforms: 'linux/amd64,linux/arm64'
+            tag-latest: 'auto'
+            tag-suffix: 'kernel'
+          - context: './images/Notebook'
+            file: './images/Notebook/Dockerfile'
+            platforms: 'linux/amd64,linux/arm64'
+            tag-latest: 'auto'
+            tag-suffix: 'notebook'
+
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: quay.io/spectrocloud-labs/remote-jupyter
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{raw}}
+            type=sha
+          flavor: |
+            latest=${{ matrix.tag-latest }}
+            suffix=${{ matrix.tag-suffix }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@master
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: quay.io
+          username: ${{ secrets.LABS_REGISTRY_USERNAME }}
+          password: ${{ secrets.LABS_REGISTRY_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          platforms: ${{ matrix.platforms }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
