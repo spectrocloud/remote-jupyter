@@ -4,15 +4,11 @@ docker rm -f jupyter-kernel jupyter-notebook
 docker build -t jupyter-kernel images/Kernel
 docker build -t jupyter-notebook images/Notebook
 
-#docker run -p 2222:22 -d --name kernel -ti jupyter-kernel
-
 # gen rsa key with docker without asking questions
 docker run --user root -v $(pwd)/keys:/home/jovyan/.ssh --entrypoint /bin/bash --rm -ti jupyter-notebook -c "ssh-keygen -f /home/jovyan/.ssh/id_rsa -t rsa -b 4096 -Cci -N ''"
 
 # start a kernel
-
 docker run -v $(pwd)/keys/id_rsa.pub:/home/jovyan/.ssh/authorized_keys -p 2222:22 -d --name jupyter-kernel -ti jupyter-kernel
-
 
 # Write a ssh config to connect to the kernel.
 # This is needed because the kernel is running in a docker container locally
