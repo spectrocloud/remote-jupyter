@@ -5,12 +5,15 @@ Container images to run Jupyter Notebooks and Kernels in separate containers.
 
 ## Usage
 
+### Create a Keypair
 We first create an SSH key pair used from the Notebook to connect to the remote kernel:
 
 ```bash
 # gen rsa key with docker without asking questions
 docker run --user root -v $(pwd)/keys:/home/jovyan/.ssh --entrypoint /bin/bash --rm -ti quay.io/spectrocloud-labs/remote-jupyter:main-notebook -c "ssh-keygen -f /home/jovyan/.ssh/id_rsa -t rsa -b 4096 -Cci -N ''"
 ```
+
+### Start a kernel
 
 We can now start a kernel:
 
@@ -19,9 +22,10 @@ We can now start a kernel:
 docker run -v $(pwd)/keys/id_rsa.pub:/home/jovyan/.ssh/authorized_keys -p 2222:22 -d --name jupyter-kernel -ti quay.io/spectrocloud-labs/remote-jupyter:main-kernel
 ```
 
-Now, write a ssh config to connect to the kernel.
+### Run the notebook
 
-This is needed because the kernel is running in a docker container locally, modify it as necessary:
+
+Write a ssh config to connect to the kernel (this is needed because the kernel is running in a docker container locally, modify it as necessary)
 
 ```bash
 cat << EOF > ssh_config
